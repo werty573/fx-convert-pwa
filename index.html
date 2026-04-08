@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#2E75B6"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="description" content="Currency Converter - Real-time exchange rates at your fingertips"/>
+<title>Currency Converter</title>
+<link rel="manifest" href="manifest.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #F0F5FF;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --border: #D0DFF5;
+  --accent: #2E75B6;
+  --accent2: #1A5FA0;
+  --warn: #FF6B6B;
+  --text: #0D1525;
+  --muted: #5A6A85;
+  --input: #EBF2FF;
+  --gold: #F5C842;
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+[data-theme="dark"] {
+  --bg: #0D1B2E;
+  --surface: #112240;
+  --card: #1A2F4A;
+  --border: #1E3A5A;
+  --accent: #4F9FE0;
+  --accent2: #2E75B6;
+  --text: #E8EDF5;
+  --muted: #7A9BC0;
+  --input: #0A1828;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html,body {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* SCREENS */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+/* SPLASH */
+#splash {
+  justify-content: center;
+  align-items: center;
+  background: var(--bg);
+}
+.splash-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.splash-sub { color: var(--muted); font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; }
+.splash-loader {
+  margin-top: 60px;
+  width: 48px; height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* AUTH */
+#auth {
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+.auth-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.auth-tagline { color: var(--muted); font-size: 0.85rem; margin-bottom: 32px; }
+
+.tabs {
+  display: flex;
+  background: var(--input);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.field input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus { border-color: var(--accent); }
+
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--accent), #1A5FA0);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #F0F5FF;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 8px 24px rgba(46,117,182,0.3);
+}
+.btn-primary:active { transform: scale(0.98); }
+
+.error-msg {
+  background: rgba(255,107,107,0.12);
+  border: 1px solid rgba(255,107,107,0.3);
+  color: var(--warn);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  display: none;
+}
+.error-msg.show { display: block; }
+
+/* APP SHELL */
+#app {
+  background: var(--bg);
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+.topbar-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.topbar-user {
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #F0F5FF;
+}
+
+/* NAV */
+.bottom-nav {
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-item svg { width: 22px; height: 22px; stroke: currentColor; }
+.nav-item.active { color: var(--accent); }
+.nav-item span { font-size: 0.68rem; }
+
+/* PAGE CONTENT */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* CONVERTER PAGE */
+.rate-badge {
+  background: linear-gradient(135deg, rgba(46,117,182,0.15), rgba(79,142,247,0.15));
+  border: 1px solid rgba(46,117,182,0.3);
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.8); }
+}
+
+.converter-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.currency-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+.currency-block { flex: 1; }
+.currency-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+.currency-select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A8BA8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  transition: border-color 0.2s;
+}
+.currency-select:focus { border-color: var(--accent); }
+.swap-btn {
+  width: 44px; height: 44px;
+  background: var(--input);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-bottom: 0;
+  transition: all 0.2s;
+}
+.swap-btn:active { transform: rotate(180deg) scale(0.9); }
+
+.amount-input {
+  width: 100%;
+  padding: 18px 16px;
+  background: var(--input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  outline: none;
+  margin-top: 16px;
+  transition: border-color 0.2s;
+}
+.amount-input:focus { border-color: var(--accent); }
+.amount-input::placeholder { color: var(--border); }
+
+.convert-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--accent), #1A5FA0);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #F0F5FF;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+  margin-top: 20px;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  box-shadow: 0 8px 24px rgba(46,117,182,0.25);
+}
+.convert-btn:active { transform: scale(0.98); }
+
+.result-card {
+  background: linear-gradient(135deg, rgba(46,117,182,0.08), rgba(79,142,247,0.08));
+  border: 1.5px solid rgba(46,117,182,0.3);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  display: none;
+  animation: fadeUp 0.4s ease;
+}
+.result-card.show { display: block; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.result-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.result-amount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 2.8rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.result-rate { font-size: 0.82rem; color: var(--muted); }
+
+/* HISTORY PAGE */
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.search-bar {
+  display: flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.search-bar svg { color: var(--muted); flex-shrink: 0; }
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.history-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: fadeUp 0.3s ease;
+}
+.history-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, rgba(46,117,182,0.15), rgba(79,142,247,0.15));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.history-info { flex: 1; min-width: 0; }
+.history-pair {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-date { font-size: 0.75rem; color: var(--muted); }
+.history-amounts { text-align: right; }
+.history-from { font-size: 0.8rem; color: var(--muted); }
+.history-to {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-state svg { margin-bottom: 16px; opacity: 0.3; }
+.empty-state p { font-size: 0.9rem; }
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+.export-btn:hover { color: var(--text); border-color: var(--accent); }
+
+/* SETTINGS PAGE */
+.settings-section {
+  margin-bottom: 24px;
+}
+.settings-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.settings-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.settings-row-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.settings-row-text { font-size: 0.9rem; font-weight: 500; }
+.settings-row-sub { font-size: 0.75rem; color: var(--muted); }
+
+/* Toggle */
+.toggle {
+  width: 48px; height: 26px;
+  background: var(--border);
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle.on { background: var(--accent); }
+.toggle.on::after { transform: translateX(22px); }
+
+.settings-select {
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  cursor: pointer;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255,107,107,0.1);
+  border: 1px solid rgba(255,107,107,0.3);
+  border-radius: var(--radius-sm);
+  color: var(--warn);
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.logout-btn:active { background: rgba(255,107,107,0.2); }
+
+/* LOADING OVERLAY */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,15,30,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.loading-overlay.show { opacity: 1; pointer-events: all; }
+.loading-spinner {
+  width: 52px; height: 52px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  color: var(--text);
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--accent); color: var(--accent); }
+.toast.error { border-color: var(--warn); color: var(--warn); }
+
+/* Responsive */
+@media(min-width:480px) {
+  .page-content { max-width: 480px; margin: 0 auto; }
+  .topbar, .bottom-nav { max-width: 480px; margin: 0 auto; }
+  #app { display: flex; justify-content: center; }
+  #app > * { width: 100%; max-width: 480px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash" class="screen active">
+  <div class="splash-logo">Currency Converter</div>
+  <div class="splash-sub">Real-time Exchange Rates</div>
+  <div class="splash-loader"></div>
+</div>
+
+<!-- AUTH -->
+<div id="auth" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">Currency Converter</div>
+    <div class="auth-tagline">Currency conversion, personalized for you.</div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <div id="auth-error" class="error-msg"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="register-form" style="display:none">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="Your full name"/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-pass" placeholder="Min. 6 characters" autocomplete="new-password"/>
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input type="password" id="reg-pass2" placeholder="Re-enter password" autocomplete="new-password"/>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="screen">
+  <div style="display:flex;flex-direction:column;height:100%;width:100%;">
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-brand">Currency Converter</div>
+      <div class="topbar-user">
+        <span id="username-display"></span>
+        <div class="topbar-avatar" id="user-avatar"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: CONVERTER -->
+    <div id="page-convert" class="page-content" style="display:flex;flex-direction:column;">
+
+      <div class="rate-badge">
+        <div class="live-dot"></div>
+        Live exchange rates · <span id="last-updated">--</span>
+      </div>
+
+      <div class="converter-card">
+        <div class="currency-row">
+          <div class="currency-block">
+            <div class="currency-label">From</div>
+            <select class="currency-select" id="from-currency">
+              <option value="USD">🇺🇸 USD</option>
+            </select>
+          </div>
+          <button class="swap-btn" onclick="swapCurrencies()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+          </button>
+          <div class="currency-block">
+            <div class="currency-label">To</div>
+            <select class="currency-select" id="to-currency">
+              <option value="TTD">🇹🇹 TTD</option>
+            </select>
+          </div>
+        </div>
+
+        <input type="number" class="amount-input" id="amount-input"
+               placeholder="0.00" inputmode="decimal" min="0"/>
+
+        <button class="convert-btn" onclick="doConvert()">
+          Convert →
+        </button>
+      </div>
+
+      <div class="result-card" id="result-card">
+        <div class="result-label">Converted Amount</div>
+        <div class="result-amount" id="result-amount">0.00</div>
+        <div class="result-rate" id="result-rate">1 USD = -- TTD</div>
+      </div>
+    </div>
+
+    <!-- PAGE: HISTORY -->
+    <div id="page-history" class="page-content" style="display:none;flex-direction:column;">
+      <div class="section-title">
+        History
+        <button class="export-btn" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          Export CSV
+        </button>
+      </div>
+
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="history-search" placeholder="Search currency..." oninput="filterHistory()"/>
+      </div>
+
+      <div id="history-list"></div>
+    </div>
+
+    <!-- PAGE: SETTINGS -->
+    <div id="page-settings" class="page-content" style="display:none;flex-direction:column;">
+      <div class="section-title">Settings</div>
+
+      <div class="settings-section">
+        <div class="settings-label">Appearance</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-icon" style="background:rgba(79,142,247,0.15);">🌙</div>
+              <div>
+                <div class="settings-row-text">Dark Mode</div>
+                <div class="settings-row-sub">Use dark color scheme</div>
+              </div>
+            </div>
+            <div class="toggle on" id="dark-toggle" onclick="toggleTheme()"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label">Default Currencies</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-icon" style="background:rgba(46,117,182,0.15);">💱</div>
+              <div>
+                <div class="settings-row-text">Default From</div>
+              </div>
+            </div>
+            <select class="settings-select" id="default-from" onchange="saveSettings()">
+              <option>USD</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-icon" style="background:rgba(245,200,66,0.15);">🎯</div>
+              <div>
+                <div class="settings-row-text">Default To</div>
+              </div>
+            </div>
+            <select class="settings-select" id="default-to" onchange="saveSettings()">
+              <option>TTD</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-icon" style="background:rgba(255,107,107,0.15);">#</div>
+              <div>
+                <div class="settings-row-text">Decimal Places</div>
+              </div>
+            </div>
+            <select class="settings-select" id="decimal-places" onchange="saveSettings()">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label">Account</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-icon" style="background:rgba(46,117,182,0.15);">👤</div>
+              <div>
+                <div class="settings-row-text" id="settings-name"></div>
+                <div class="settings-row-sub" id="settings-email"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+      <button class="nav-item active" id="nav-convert" onclick="showPage('convert')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+        <span>Convert</span>
+      </button>
+      <button class="nav-item" id="nav-history" onclick="showPage('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>History</span>
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="showPage('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA & STATE ───────────────────────────────────────────────────────────
+
+const CURRENCIES = [
+  {code:'USD',flag:'🇺🇸',name:'US Dollar'},
+  {code:'EUR',flag:'🇪🇺',name:'Euro'},
+  {code:'GBP',flag:'🇬🇧',name:'British Pound'},
+  {code:'TTD',flag:'🇹🇹',name:'TT Dollar'},
+  {code:'CAD',flag:'🇨🇦',name:'Canadian Dollar'},
+  {code:'AUD',flag:'🇦🇺',name:'Australian Dollar'},
+  {code:'JPY',flag:'🇯🇵',name:'Japanese Yen'},
+  {code:'CHF',flag:'🇨🇭',name:'Swiss Franc'},
+  {code:'CNY',flag:'🇨🇳',name:'Chinese Yuan'},
+  {code:'INR',flag:'🇮🇳',name:'Indian Rupee'},
+  {code:'MXN',flag:'🇲🇽',name:'Mexican Peso'},
+  {code:'BRL',flag:'🇧🇷',name:'Brazilian Real'},
+  {code:'NGN',flag:'🇳🇬',name:'Nigerian Naira'},
+  {code:'ZAR',flag:'🇿🇦',name:'South African Rand'},
+  {code:'KYD',flag:'🇰🇾',name:'Cayman Dollar'},
+  {code:'JMD',flag:'🇯🇲',name:'Jamaican Dollar'},
+  {code:'BBD',flag:'🇧🇧',name:'Barbadian Dollar'},
+  {code:'GYD',flag:'🇬🇾',name:'Guyanese Dollar'},
+  {code:'SGD',flag:'🇸🇬',name:'Singapore Dollar'},
+  {code:'NZD',flag:'🇳🇿',name:'New Zealand Dollar'},
+  {code:'HKD',flag:'🇭🇰',name:'Hong Kong Dollar'},
+  {code:'SEK',flag:'🇸🇪',name:'Swedish Krona'},
+  {code:'NOK',flag:'🇳🇴',name:'Norwegian Krone'},
+  {code:'AED',flag:'🇦🇪',name:'UAE Dirham'},
+  {code:'SAR',flag:'🇸🇦',name:'Saudi Riyal'},
+];
+
+// Fallback mock rates (USD base)
+const MOCK_RATES = {
+  USD:1, EUR:0.92, GBP:0.79, TTD:6.79, CAD:1.36, AUD:1.53, JPY:149.5,
+  CHF:0.90, CNY:7.24, INR:83.1, MXN:17.2, BRL:4.97, NGN:1580, ZAR:18.7,
+  KYD:0.83, JMD:155.0, BBD:2.0, GYD:209.0, SGD:1.34, NZD:1.63, HKD:7.82,
+  SEK:10.5, NOK:10.6, AED:3.67, SAR:3.75
+};
+
+let currentUser = null;
+let allRates = { ...MOCK_RATES };
+let ratesTimestamp = null;
+let isDark = false;
+// Apply theme immediately on load
+(function() {
+  document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+// ─── STORAGE HELPERS ────────────────────────────────────────────────────────
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('fx_users') || '{}'); } catch { return {}; }
+}
+function saveUsers(u) { localStorage.setItem('fx_users', JSON.stringify(u)); }
+
+function getHistory(email) {
+  try { return JSON.parse(localStorage.getItem('fx_history_' + email) || '[]'); } catch { return []; }
+}
+function saveHistory(email, h) { localStorage.setItem('fx_history_' + email, JSON.stringify(h)); }
+
+function getUserSettings(email) {
+  try {
+    return JSON.parse(localStorage.getItem('fx_settings_' + email) || 'null') || {
+      dark: false, defaultFrom: 'USD', defaultTo: 'TTD', decimals: 2
+    };
+  } catch { return { dark: false, defaultFrom: 'USD', defaultTo: 'TTD', decimals: 2 }; }
+}
+function saveUserSettings(email, s) { localStorage.setItem('fx_settings_' + email, JSON.stringify(s)); }
+
+// ─── SCREEN TRANSITIONS ──────────────────────────────────────────────────────
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.querySelector('.tab-btn:first-child').classList.toggle('active', isLogin);
+  document.querySelector('.tab-btn:last-child').classList.toggle('active', !isLogin);
+  document.getElementById('login-form').style.display = isLogin ? '' : 'none';
+  document.getElementById('register-form').style.display = isLogin ? 'none' : '';
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) { showAuthError('Please fill in all fields.'); return; }
+  const users = getUsers();
+  if (!users[email] || users[email].password !== pass) {
+    showAuthError('Invalid email or password.'); return;
+  }
+  loginSuccess(users[email]);
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  if (!name || !email || !pass || !pass2) { showAuthError('Please fill in all fields.'); return; }
+  if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  if (pass !== pass2) { showAuthError('Passwords do not match.'); return; }
+  const users = getUsers();
+  if (users[email]) { showAuthError('An account with this email already exists.'); return; }
+  users[email] = { name, email, password: pass };
+  saveUsers(users);
+  loginSuccess(users[email]);
+}
+
+function loginSuccess(user) {
+  currentUser = user;
+  localStorage.setItem('fx_session', user.email);
+  loadUserIntoApp();
+  showScreen('app');
+  fetchRates();
+}
+
+function doLogout() {
+  if (!confirm('Are you sure you want to sign out?')) return;
+  currentUser = null;
+  localStorage.removeItem('fx_session');
+  showScreen('auth');
+  showPage('convert');
+}
+
+// ─── APP INIT ────────────────────────────────────────────────────────────────
+
+function loadUserIntoApp() {
+  // Avatar + name
+  document.getElementById('username-display').textContent = currentUser.name.split(' ')[0];
+  document.getElementById('user-avatar').textContent = currentUser.name[0].toUpperCase();
+  document.getElementById('settings-name').textContent = currentUser.name;
+  document.getElementById('settings-email').textContent = currentUser.email;
+
+  // Load settings
+  const s = getUserSettings(currentUser.email);
+  isDark = s.dark === true;
+  applyTheme();
+  document.getElementById('dark-toggle').classList.toggle('on', isDark);
+  document.getElementById('decimal-places').value = s.decimals || 2;
+
+  // Populate currency selects
+  populateCurrencySelects(s.defaultFrom || 'USD', s.defaultTo || 'TTD');
+
+  // Refresh history
+  renderHistory();
+}
+
+function populateCurrencySelects(defaultFrom, defaultTo) {
+  const selects = ['from-currency','to-currency','default-from','default-to'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = CURRENCIES.map(c =>
+      `<option value="${c.code}">${c.flag} ${c.code} – ${c.name}</option>`
+    ).join('');
+  });
+  document.getElementById('from-currency').value = defaultFrom;
+  document.getElementById('to-currency').value = defaultTo;
+  document.getElementById('default-from').value = defaultFrom;
+  document.getElementById('default-to').value = defaultTo;
+}
+
+// ─── EXCHANGE RATES ──────────────────────────────────────────────────────────
+
+async function fetchRates() {
+  const API_KEY = 'da5b3af437d1700d76aa5af6'; // demo key from exchangerate-api
+  try {
+    const res = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`, {signal: AbortSignal.timeout(6000)});
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    if (data.result === 'success') {
+      allRates = data.conversion_rates;
+      ratesTimestamp = new Date();
+      document.getElementById('last-updated').textContent = ratesTimestamp.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      return;
+    }
+  } catch(e) {}
+  // Fallback
+  allRates = { ...MOCK_RATES };
+  document.getElementById('last-updated').textContent = 'Offline (cached)';
+}
+
+function getRate(from, to) {
+  const baseFrom = allRates[from] || 1;
+  const baseTo = allRates[to] || 1;
+  return baseTo / baseFrom;
+}
+
+// ─── CONVERTER ────────────────────────────────────────────────────────────────
+
+function swapCurrencies() {
+  const fromSel = document.getElementById('from-currency');
+  const toSel = document.getElementById('to-currency');
+  [fromSel.value, toSel.value] = [toSel.value, fromSel.value];
+  document.getElementById('result-card').classList.remove('show');
+}
+
+async function doConvert() {
+  const amount = parseFloat(document.getElementById('amount-input').value);
+  if (!amount || isNaN(amount) || amount <= 0) { showToast('Enter a valid amount', 'error'); return; }
+  const from = document.getElementById('from-currency').value;
+  const to = document.getElementById('to-currency').value;
+  if (from === to) { showToast('Select different currencies', 'error'); return; }
+
+  showLoading(true);
+  await fetchRates();
+  showLoading(false);
+
+  const s = getUserSettings(currentUser.email);
+  const decimals = parseInt(s.decimals) || 2;
+  const rate = getRate(from, to);
+  const result = amount * rate;
+
+  document.getElementById('result-amount').textContent =
+    `${getFlagFor(to)} ${result.toFixed(decimals)} ${to}`;
+  document.getElementById('result-rate').textContent =
+    `1 ${from} = ${rate.toFixed(4)} ${to}`;
+  document.getElementById('result-card').classList.add('show');
+
+  // Save to history
+  const h = getHistory(currentUser.email);
+  h.unshift({
+    id: Date.now(),
+    from, to,
+    amount, result,
+    rate,
+    date: new Date().toISOString()
+  });
+  saveHistory(currentUser.email, h.slice(0, 200));
+  showToast('Conversion saved to history ✓', 'success');
+}
+
+function getFlagFor(code) {
+  const c = CURRENCIES.find(x => x.code === code);
+  return c ? c.flag : '';
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
+
+function renderHistory(filter = '') {
+  const list = document.getElementById('history-list');
+  const h = getHistory(currentUser?.email || '');
+  const filtered = filter
+    ? h.filter(x => x.from.includes(filter.toUpperCase()) || x.to.includes(filter.toUpperCase()))
+    : h;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p>No conversions yet.<br>Make your first conversion!</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(item => {
+    const d = new Date(item.date);
+    const dateStr = d.toLocaleDateString([], {month:'short', day:'numeric'}) + ' · ' +
+                    d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    return `<div class="history-item">
+      <div class="history-icon">${getFlagFor(item.from)}→${getFlagFor(item.to)}</div>
+      <div class="history-info">
+        <div class="history-pair">${item.from} → ${item.to}</div>
+        <div class="history-date">${dateStr}</div>
+      </div>
+      <div class="history-amounts">
+        <div class="history-from">${item.amount.toFixed(2)} ${item.from}</div>
+        <div class="history-to">${item.result.toFixed(2)} ${item.to}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterHistory() {
+  renderHistory(document.getElementById('history-search').value);
+}
+
+function exportCSV() {
+  const h = getHistory(currentUser.email);
+  if (!h.length) { showToast('No history to export', 'error'); return; }
+  const rows = [['Date','From','Amount','To','Result','Rate']];
+  h.forEach(x => rows.push([
+    new Date(x.date).toLocaleString(), x.from, x.amount.toFixed(2),
+    x.to, x.result.toFixed(4), x.rate.toFixed(6)
+  ]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'fx-history.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported successfully', 'success');
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+
+function toggleTheme() {
+  isDark = !isDark;
+  document.getElementById('dark-toggle').classList.toggle('on', isDark);
+  applyTheme();
+  saveSettings();
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+}
+
+function saveSettings() {
+  if (!currentUser) return;
+  const s = {
+    dark: isDark,
+    defaultFrom: document.getElementById('default-from').value,
+    defaultTo: document.getElementById('default-to').value,
+    decimals: parseInt(document.getElementById('decimal-places').value)
+  };
+  saveUserSettings(currentUser.email, s);
+  // Update converter selects
+  document.getElementById('from-currency').value = s.defaultFrom;
+  document.getElementById('to-currency').value = s.defaultTo;
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+
+function showPage(name) {
+  ['convert','history','settings'].forEach(p => {
+    document.getElementById('page-' + p).style.display = 'none';
+    document.getElementById('nav-' + p).classList.remove('active');
+  });
+  document.getElementById('page-' + name).style.display = 'flex';
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'history') renderHistory(document.getElementById('history-search').value);
+}
+
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
+
+function showLoading(v) {
+  document.getElementById('loading').classList.toggle('show', v);
+}
+
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const session = localStorage.getItem('fx_session');
+    if (session) {
+      const users = getUsers();
+      if (users[session]) {
+        currentUser = users[session];
+        loadUserIntoApp();
+        showScreen('app');
+        fetchRates();
+        return;
+      }
+    }
+    showScreen('auth');
+  }, 1800);
+});
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('auth').classList.contains('active')) {
+      if (document.getElementById('login-form').style.display !== 'none') doLogin();
+      else doRegister();
+    } else if (document.getElementById('page-convert').style.display !== 'none') {
+      doConvert();
+    }
+  }
+});
+  // Register service worker (PWA)
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+</script>
+</body>
+</html>
